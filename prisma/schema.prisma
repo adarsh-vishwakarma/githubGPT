@@ -1,0 +1,86 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String
+  passowrd  String
+  createdAt DateTime @default(now())
+  Reports   Reports[]
+  Rewards   Rewards[]
+  Notifications Notifications[]
+  CollectedWastes CollectedWastes[]
+  Transactions Transactions[]
+}
+
+model Reports {
+  id                 Int      @id @default(autoincrement())
+  userId             Int
+  location           String
+  wasteType          String
+  amount             String
+  imageUrl           String?
+  verificationResult Json?
+  status             String   @default("pending")
+  createdAt          DateTime @default(now())
+  collectorId        Int?
+  Users              Users    @relation(fields: [userId], references: [id])
+  CollectedWastes    CollectedWastes[]
+}
+
+model Rewards {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  points        Int      @default(0)
+  level         Int      @default(1)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  isAvailable   Boolean  @default(true)
+  description   String?
+  name          String
+  collectionInfo String
+  Users         Users    @relation(fields: [userId], references: [id])
+}
+
+model CollectedWastes {
+  id            Int      @id @default(autoincrement())
+  reportId      Int
+  collectorId   Int
+  collectionDate DateTime
+  status        String   @default("collected")
+  Reports       Reports  @relation(fields: [reportId], references: [id])
+  Users         Users    @relation(fields: [collectorId], references: [id])
+}
+
+model Notifications {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  message   String
+  type      String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  Users     Users    @relation(fields: [userId], references: [id])
+}
+
+model Transactions {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  type        String
+  amount      Int
+  description String
+  date        DateTime @default(now())
+  Users       Users    @relation(fields: [userId], references: [id])
+}
