@@ -8,8 +8,8 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { useSession } from "next-auth/react";
 import { createReport } from "@/actions/dbActions";
 import toast from "react-hot-toast";
-const UploadWasteReport = () => {
-  const { data: session, status } = useSession();
+const UploadWasteReport = ({session}) => {
+
 
   const geminiApiKey = "AIzaSyAgONkQEHh7ifH0HOVnoyOJEX8jrcuQJ9s";
 
@@ -71,16 +71,18 @@ const UploadWasteReport = () => {
         ];
 
         const prompt = `You are an expert in waste management and recycling. Analyze this image and provide:
-            1. The type of waste (e.g., plastic, paper, glass, metal, organic)
-            2. An estimate of the quantity or amount (in kg or liters)
-            3. Your confidence level in this assessment (as a percentage)
-            
-            Respond in JSON format like this:
-            {
-              "wasteType": "type of waste",
-              "quantity": "estimated quantity with unit",
-              "confidence": confidence level as a number between 0 and 1
-            }`;
+1. The type of waste detected (e.g., plastic, paper, glass, metal, organic).
+2. An estimate of the quantity or amount in a concise format, using only "kg" for solid waste and "liters" for liquid waste (e.g., "approximately 100 kg" or "approximately 50 liters").
+3. Your confidence level in this assessment as a percentage (between 0 and 1).
+
+Ensure the estimated quantity is always expressed in either "kg" or "liters".
+
+Respond in JSON format like this:
+{
+  "wasteType": "type of waste",
+  "quantity": "estimated quantity with unit (kg or liters only)",
+  "confidence": confidence level as a number between 0 and 1
+}`;
 
         const result = await model.generateContent([prompt, ...imageParts]);
         const response = await result.response;
@@ -92,6 +94,7 @@ const UploadWasteReport = () => {
             .replace(/```\s*$/g, "")
             .trim();
           console.log(cleanedText);
+   
           console.log("parsedResult :", cleanedText);
           const parsedResult = JSON.parse(cleanedText);
 
@@ -146,10 +149,10 @@ const UploadWasteReport = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // if (verificationStatus !== "success" || !session) {
-    //   toast.error("Please verify the waste before submitting or log in.");
-    //   return;
-    // }
+    if (verificationStatus !== "success" || !session) {
+      toast.error("Please verify the waste before submitting or log in.");
+      return;
+    }
 
     setIsSubmitting(true);
     // const userId = await user.id

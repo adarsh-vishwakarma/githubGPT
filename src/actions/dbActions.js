@@ -57,6 +57,7 @@ export async function createReport(
   imageUrl = null,
   verificationResult = null
 ) {
+  console.log()
   try {
     const userId = parseInt(id, 10); // Parse string to integer
 
@@ -115,6 +116,7 @@ export async function getReportsByUserId(userId) {
 
 export async function getAllRewards() {
   try {
+    
     const rewards = await prisma.rewards.findMany({
       include: {
         user: {
@@ -123,11 +125,12 @@ export async function getAllRewards() {
           },
         },
       },
+   
       orderBy: {
         points: 'desc', // Order by points in descending order
       },
     });
-
+console.log(rewards)
     // Mapping rewards to include userName in the results
     const mappedRewards = rewards.map(reward => ({
       ...reward,
@@ -169,12 +172,11 @@ export async function getWasteCollectionTasks(limit = 20) {
 }
 
 
-
-
 // Reward Functions
 export async function getOrCreateReward(userId) {
+
   try {
-    let reward = await prisma.rewards.findUnique({
+    let reward = await prisma.rewards.findFirst({
       where: { userId },
     });
 
@@ -279,6 +281,7 @@ export async function createNotification(userId, message, type) {
 
 // Transaction Functions
 export async function createTransaction(userId, type, amount, description) {
+
   try {
     const transaction = await prisma.transactions.create({
       data: {
@@ -288,6 +291,7 @@ export async function createTransaction(userId, type, amount, description) {
         description,
       },
     });
+    console.log(transaction)
     return transaction;
   } catch (error) {
     console.error("Error creating transaction:", error);
@@ -297,18 +301,19 @@ export async function createTransaction(userId, type, amount, description) {
 
 // Reward Redemption Functions
 export async function redeemReward(userId, rewardId) {
+
   try {
     const userReward = await getOrCreateReward(userId);
-
+    
     if (rewardId === 0) {
-      const updatedReward = await prisma.rewards.update({
+      const updatedReward = await prisma.rewards.updateMany({
         where: { userId },
         data: {
           points: 0,
           updatedAt: new Date(),
         },
       });
-
+     console.log("Hii bb")
       await createTransaction(
         userId,
         "redeemed",
@@ -461,12 +466,113 @@ export async function updateTaskStatus(reportId, newStatus, collectorId) {
         collectorId: newCollectorId
       }
     });
-    // console.log(updatedReport)
-    // return 
-    console.log("Complete")
+
     return updatedReport;
   } catch (error) {
     console.error("Error updating task status:", error);
     throw error;
+  }
+}
+
+
+export async function saveCollectedWaste(reportId, collectorId, verificationResult) {
+  try {
+    // Insert the collected waste record into the database
+    const collectedWaste = await prisma.collectedWastes.create({
+      data: {
+        reportId,
+        collectorId,
+        collectionDate: new Date(),
+        status: 'verified',
+      },
+    });
+
+    // Optionally handle verificationResult if you need to log or process it
+    // For example:
+    // await processVerificationResult(verificationResult);
+console.log(collectedWaste)
+    return collectedWaste;
+  } catch (error) {
+    console.error("Error saving collected waste:", error);
+    throw error;
+  }
+}
+
+
+
+export async function saveReward(userId, amount) {
+  try {
+    const reward = await prisma.rewards.create({
+      data: {
+        userId,
+        name: 'Waste Collection Reward',
+        collectionInfo: 'Points earned from waste collection',
+        points: amount,
+        level: 1,
+        isAvailable: true,
+      },
+    });
+
+    // Create a transaction for this reward (Assuming createTransaction exists)
+    await createTransaction(userId, 'earned_collect', amount, 'Points earned for collecting waste');
+
+    return reward;
+  } catch (error) {
+    console.error('Error saving reward:', error);
+    throw error;
+  }
+}
+
+
+
+export async function getAvailableRewards(userId) {
+  try {
+    console.log('Fetching available rewards for user:', userId);
+    
+    // Get user's total points using existing function
+    const userTransactions = await getRewardTransactions(userId);
+    const userPoints = userTransactions.reduce((total, transaction) => {
+      return transaction.type.startsWith('earned') ? total + transaction.amount : total - transaction.amount;
+    }, 0);
+
+    console.log('User total points:', userPoints);
+
+    // Get available rewards from the database using Prisma
+    const dbRewards = await prisma.rewards.findMany({
+      where: { isAvailable: true },
+      select: {
+        id: true,
+        name: true,
+        points: true,
+        description: true,
+        collectionInfo: true,
+      },
+    });
+
+    console.log('Rewards from database:', dbRewards);
+
+    // Combine user points and database rewards
+    const allRewards = [
+      {
+        id: 0, // Special ID for user's points
+        name: "Your Points",
+        cost: userPoints,
+        description: "Redeem your earned points",
+        collectionInfo: "Points earned from reporting and collecting waste"
+      },
+      ...dbRewards.map(reward => ({
+        id: reward.id,
+        name: reward.name,
+        cost: reward.points,
+        description: reward.description,
+        collectionInfo: reward.collectionInfo,
+      })),
+    ];
+
+    console.log('All available rewards:', allRewards);
+    return allRewards;
+  } catch (error) {
+    console.error("Error fetching available rewards:", error);
+    return [];
   }
 }

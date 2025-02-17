@@ -1,7 +1,6 @@
 "use client";
 import { getRecentReports } from "@/actions/dbActions";
 import { MapPin } from "lucide-react";
-import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 const RecentReport = () => {

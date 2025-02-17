@@ -6,8 +6,8 @@ import { getUserByEmail, getRewardTransactions, getAvailableRewards, redeemRewar
 import { toast } from 'react-hot-toast';
 import { useSession } from 'next-auth/react';
 
-export default function RewardsPage() {
-    const { data: session, status } = useSession();
+export default function RewardsPage({session}) {
+console.log(session)
 
   const [user, setUser] = useState(null);
   const [balance, setBalance] = useState(0);
