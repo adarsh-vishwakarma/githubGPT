@@ -39,3 +39,23 @@ export async function createProject(data) {
     return { success: false, message: "An error occurred while creating the project.", error: error.message };
   }
 }
+
+
+
+export async function getUserProjects() {
+  const userId = await authMiddleware();
+    if (!userId) {
+      return { success: false, message: "Unauthorized: You must be logged in." };
+    }
+  const projects = await prisma.project.findMany({
+    where: {
+      UserToProject: {
+        some: {
+          userId
+        },
+      },
+      deletedAt: null,
+    },
+  });
+  return projects
+}

@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -25,7 +25,8 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import logo from "../../../public/logo.png"
+import logo from "../../../public/logo.png";
+import UseProject from "@/hooks/use-project";
 const items = [
   {
     title: "Dashboard",
@@ -49,21 +50,24 @@ const items = [
   },
 ];
 
-const projects = [
-  {
-    name: "project 1",
-  },
-  {
-    name: "Project 2",
-  },
-  {
-    name: "Project 3",
-  },
-];
+// const projects = [
+//   {
+//     name: "project 1",
+//   },
+//   {
+//     name: "Project 2",
+//   },
+//   {
+//     name: "Project 3",
+//   },
+// ];
 
 const AppSidebar = () => {
   const pathname = usePathname();
-  const { open} = useSidebar()
+  const { open } = useSidebar();
+
+  const { projects, project, projectId, setProjectId, isLoading, error } =
+    UseProject();
 
   return (
     <Sidebar collapsible="icon" variant="floating">
@@ -71,12 +75,9 @@ const AppSidebar = () => {
         <div className="flex items-center gap-2">
           <Image src={logo} alt="logo" width={60} height={60} />
           {open && (
-        <h1 className="text-xl font-bold text-primary/80">
-        GithubGPT
-       </h1>
-       )}
+            <h1 className="text-xl font-bold text-primary/80">GithubGPT</h1>
+          )}
         </div>
-       
       </SidebarHeader>
 
       <SidebarContent>
@@ -108,43 +109,54 @@ const AppSidebar = () => {
         <SidebarGroup>
           <SidebarGroupLabel>Your Projects</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {projects.map((project) => {
-                return (
-                  <SidebarMenuItem key={project.name}>
-                    <SidebarMenuButton asChild>
-                      <div>
+            {isLoading ? (
+              <p className="text-center text-gray-500">Loading projects...</p>
+            ) : (
+              <SidebarMenu>
+                {projects?.map((project: any) => {
+                  return (
+                    <SidebarMenuItem key={project.id}>
+                      <SidebarMenuButton asChild>
                         <div
-                          className={cn(
-                            "rounded-sm border size-6 flex items-center justify-center text-sm bg-white text-primary",
-                            {
-                              "bg-primary text-white": true,
-                            }
-                          )}
+                          onClick={() => {
+                            setProjectId(project.id);
+                          }}
                         >
-                          {project.name[0]}
+                          <div
+                            className={cn(
+                              "rounded-sm border size-6 flex items-center justify-center text-sm bg-white text-primary",
+                              {
+                                "bg-primary text-white":
+                                  project.id === projectId,
+                              }
+                            )}
+                          >
+                            {project.name[0]}
+                          </div>
+                          <span>{project.name}</span>
                         </div>
-                        <span>{project.name}</span>
-                      </div>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            )}
           </SidebarGroupContent>
         </SidebarGroup>
 
         <div className="h-2"></div>
-       {open && ( <SidebarMenu>
-          <SidebarMenuItem>
-            <Link href="/create">
-              <Button size="sm" variant={"outline"} className="w-fit">
-                <Plus />
-                Create Project
-              </Button>
-            </Link>
-          </SidebarMenuItem>
-        </SidebarMenu>)}
+        {open && (
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <Link href="/create">
+                <Button size="sm" variant={"outline"} className="w-fit">
+                  <Plus />
+                  Create Project
+                </Button>
+              </Link>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        )}
       </SidebarContent>
     </Sidebar>
   );

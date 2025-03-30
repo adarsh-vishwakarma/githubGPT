@@ -1,11 +1,15 @@
 "use client"
-import { useUser } from '@clerk/nextjs'
+import UseProject from '@/hooks/use-project';
 import React from 'react'
 
 const DashboardPage = () => {
-    const { user} = useUser();
+  const { projects, project, projectId, isLoading, error } = UseProject();
+  console.log("project")
+
+
   return (
-    <div>{user?.firstName}</div>
+    // <div>{project?.name}</div>
+    <div>Hii</div>
   )
 }
 

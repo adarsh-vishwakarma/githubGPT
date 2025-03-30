@@ -5,6 +5,7 @@ import React, { useState } from "react";
 // import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { createProject } from "../../actions/dbActions";
+import useRefetch from "@/hooks/use-refetch";
 type FormInput = {
   repoUrl: string;
   projectName: string;
@@ -15,16 +16,25 @@ const CreatePage = () => {
   // const { register, handleSubmit, reset } = useForm<FormInput>();
   const [projectName, setProjectName] = useState("");
   const [repoUrl, setRepoUrl] = useState("");
-  const [githubToken, setGithubToken] = useState("")
-
-  const handleSubmit = async (e:any) => {
+  const [githubToken, setGithubToken] = useState("");
+  const refetch = useRefetch()
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
   
-    const result = await createProject({projectName, repoUrl, githubToken: githubToken || null});
-   toast(result.message);
-
-    return true;
+    const result = await createProject({
+      projectName,
+      repoUrl,
+      githubToken: githubToken || null,
+    });
+  
+    console.log("Project Created:", result);
+  
+    // ✅ Auto refetch projects after adding a new one
+    await refetch();
   };
+  
+
+ 
   return (
     <div className="flex items-center gap-12 h-full justify-center">
       <img src="/undraw_developer.svg" className="h-56 w-auto" />
@@ -41,20 +51,23 @@ const CreatePage = () => {
         <div>
           <form onSubmit={handleSubmit}>
             <Input
-              value={projectName} onChange={(e) => setProjectName(e.target.value)}
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
               placeholder="Project Name"
               required
             />
             <div className="h-2"></div>
             <Input
-              value={repoUrl} onChange={(e) => setRepoUrl(e.target.value)}
+              value={repoUrl}
+              onChange={(e) => setRepoUrl(e.target.value)}
               type="url"
               placeholder="Github URL"
               required
             />
             <div className="h-2"></div>
             <Input
-             value={githubToken} onChange={(e) => setGithubToken(e.target.value)}
+              value={githubToken}
+              onChange={(e) => setGithubToken(e.target.value)}
               placeholder="Github Token (Optional)"
             />
             <div className="h-2"></div>
