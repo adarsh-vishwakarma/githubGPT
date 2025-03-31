@@ -8,8 +8,10 @@ const DashboardPage = () => {
 
 
   return (
-    // <div>{project?.name}</div>
-    <div>Hii</div>
+    <>
+    <div>{project?.name}</div>
+    <div>{project?.id}</div>
+    </>
   )
 }
 

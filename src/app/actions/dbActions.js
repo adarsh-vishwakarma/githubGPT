@@ -23,7 +23,7 @@ export async function createProject(data) {
 
     const project = await prisma.project.create({
       data: {
-        githubURL: repoUrl,
+        githubUrl: repoUrl,
         name: projectName, 
         UserToProject: {
           create: {
